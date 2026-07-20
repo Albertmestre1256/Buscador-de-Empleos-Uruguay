@@ -1,0 +1,4 @@
+playwright
+google-genai
+requests
+beautifulsoup4
