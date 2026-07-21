@@ -60,38 +60,37 @@ async def extraer_contenido():
     return "\n".join(resultados)
 
 # --- 3. ANALIZAR Y FILTRAR CON GEMINI ---
-def analizar_con_gemini(texto_completo):
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        return "Falta la API Key de Gemini."
-        
-    # Inicializar el cliente de Gemini
-    client = genai.Client(api_key=api_key)
+import requests
+
+def analizar_con_ia(texto):
+    print("Analizando contenido con Groq (Llama 3)...")
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {os.environ.get('GROQ_API_KEY')}",
+        "Content-Type": "application/json"
+    }
     
     prompt = f"""
-    Eres un asistente personal experto en búsqueda de empleo y llamados docentes/laborales en Uruguay.
-    A continuación tienes el contenido textual extraído hoy de varias páginas de instituciones (CFE, UTU, ANII, UCU, ORT, Computrabajo):
-
-    {texto_completo}
-
-    INSTRUCCIONES:
-    1. Revisa cada sección e identifica si hay **nuevos llamados, vacantes de empleo, concursos o oportunidades laborales** publicados.
-    2. Si encuentras llamadas u ofertas, organízalas por institución con:
-       - Título de la vacante / llamado
-       - Breve descripción o requisitos si están disponibles
-       - El enlace directo a la página donde se encontró (URL proporcionada en el texto)
-    3. Si alguna página no muestra llamados claros o no tuvo cambios/vacantes, omítela del reporte.
-    4. Si en **ninguna** de las páginas hay ofertas relevantes, responde exactamente: "No se encontraron nuevos llamados ni ofertas de interés hoy."
-    5. Formatea la respuesta de manera muy clara, profesional y fácil de leer por correo electrónico.
+    Eres un asistente experto en recursos humanos. 
+    A continuación te paso un texto extraído de varias páginas de empleo en Uruguay.
+    Por favor, resume las ofertas de trabajo más relevantes, indicando cargo, institución y enlace si está disponible.
+    
+    TEXTO:
+    {texto}
     """
     
-    # Generar contenido usando Gemini 2.5 Flash
-    response = client.models.generate_content(
-        model='gemini-2.0-flash',
-        contents=prompt,
-    )
+    data = {
+        "model": "llama3-70b-8192",
+        "messages": [{"role": "user", "content": prompt}]
+    }
     
-    return response.text
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        return response.json()['choices'][0]['message']['content']
+    except Exception as e:
+        print(f"Error al analizar con IA: {e}")
+        return "Hubo un error al generar el resumen de las ofertas."
 
 # --- 4. ENVÍO DE EMAIL ---
 def enviar_email(mensaje):
@@ -121,8 +120,8 @@ if __name__ == "__main__":
     print("Iniciando escaneo de páginas laborales...")
     contenido_extraido = asyncio.run(extraer_contenido())
     
-    print("Analizando contenido con Gemini...")
-    resumen = analizar_con_gemini(contenido_extraido)
+    print("Analizando contenido con Grok...")
+    resumen = analizar_con_ia(contenido_extraido)
     
     print("\n--- RESUMEN GENERADO ---")
     print(resumen)
