@@ -81,7 +81,7 @@ def analizar_con_ia(texto):
     """
     
     data = {
-        "model": "grok-2",
+        "model": "grok-2-latest",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3
     }
