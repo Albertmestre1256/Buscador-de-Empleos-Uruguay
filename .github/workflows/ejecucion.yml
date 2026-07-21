@@ -26,9 +26,9 @@ jobs:
           python -m playwright install chromium
           python -m playwright install-deps
 
-      - name: Ejecutar Scraper y GROK
+      - name: Ejecutar Scraper e IA
         env:
-          GEMINI_API_KEY: ${{ secrets.GROK_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
