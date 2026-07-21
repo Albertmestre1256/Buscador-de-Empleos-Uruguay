@@ -61,6 +61,7 @@ async def extraer_contenido():
     return "\n".join(resultados)
 
 # --- 3. ANALIZAR Y FILTRAR CON xAI (Grok) ---
+# --- 3. ANALIZAR Y FILTRAR CON xAI (Grok) ---
 def analizar_con_ia(texto):
     print("Analizando contenido con xAI (Grok)...")
     url = "https://api.x.ai/v1/chat/completions"
@@ -81,7 +82,7 @@ def analizar_con_ia(texto):
     """
     
     data = {
-        "model": "grok-2-latest",
+        "model": "grok-3",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3
     }
