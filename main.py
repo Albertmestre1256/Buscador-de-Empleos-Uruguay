@@ -57,18 +57,20 @@ async def extraer_contenido():
         
     return "\n".join(resultados)
 
-# --- 3. ANALIZAR Y FILTRAR CON GEMINI ---
+# --- 3. ANALIZAR Y FILTRAR CON grok ---
 import requests
 import os
 
 def analizar_con_ia(texto):
     print("Analizando contenido con xAI (Grok)...")
-    # Cambiamos la URL a la de xAI
     url = "https://api.x.ai/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {os.environ.get('GROQ_API_KEY')}",
         "Content-Type": "application/json"
     }
+    
+    # Recortamos el texto por seguridad si es muy grande para la IA
+    texto_recortado = texto[:15000] if len(texto) > 15000 else texto
     
     prompt = f"""
     Eres un asistente experto en recursos humanos. 
@@ -76,12 +78,13 @@ def analizar_con_ia(texto):
     Por favor, resume las ofertas de trabajo más relevantes, indicando cargo, institución y enlace si está disponible.
     
     TEXTO:
-    {texto}
+    {texto_recortado}
     """
     
     data = {
-        "model": "grok-2-latest", # Cambiamos el modelo al de Grok
-        "messages": [{"role": "user", "content": prompt}]
+        "model": "grok-beta",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.3
     }
     
     try:
@@ -89,31 +92,10 @@ def analizar_con_ia(texto):
         response.raise_for_status()
         return response.json()['choices'][0]['message']['content']
     except Exception as e:
-        print(f"Error al analizar con IA: {e}")
+        print(f"Error detallado al analizar con IA: {e}")
+        if hasattr(response, 'text'):
+            print(f"Respuesta del servidor: {response.text}")
         return "Hubo un error al generar el resumen de las ofertas."
-
-# --- 4. ENVÍO DE EMAIL ---
-def enviar_email(mensaje):
-    email_emisor = os.environ.get("EMAIL_USER")
-    password = os.environ.get("EMAIL_PASS")
-    email_receptor = os.environ.get("EMAIL_TO")
-    
-    if not email_emisor or not password or not email_receptor:
-        print("Faltan variables de entorno para el envío de correo.")
-        return
-
-    msg = MIMEText(mensaje, 'plain', 'utf-8')
-    msg['Subject'] = '📌 Resumen Diario: Llamados y Empleos (CFE, UTU, UCU, etc.)'
-    msg['From'] = email_emisor
-    msg['To'] = email_receptor
-    
-    try:
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(email_emisor, password)
-            server.sendmail(email_emisor, email_receptor, msg.as_string())
-        print("¡Email con el resumen enviado con éxito!")
-    except Exception as e:
-        print(f"Error al enviar email: {e}")
 
 # --- EJECUCIÓN PRINCIPAL ---
 if __name__ == "__main__":
