@@ -64,7 +64,7 @@ def analizar_con_ia(texto):
     print("Analizando contenido con Groq (Llama 3)...")
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
-        "Authorization": f"Bearer {os.environ.get('GROQ_API_KEY')}",
+        "Authorization": f"Bearer {os.environ.get('GROK_API_KEY')}",
         "Content-Type": "application/json"
     }
     
