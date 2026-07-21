@@ -2,7 +2,10 @@ import os
 import smtplib
 import asyncio
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from playwright.async_api import async_playwright
+import requests
+
 # 1. LISTA DE FUENTES A MONITOREAR
 PAGINAS = [
     # CFE
@@ -57,10 +60,7 @@ async def extraer_contenido():
         
     return "\n".join(resultados)
 
-# --- 3. ANALIZAR Y FILTRAR CON grok ---
-import requests
-import os
-
+# --- 3. ANALIZAR Y FILTRAR CON xAI (Grok) ---
 def analizar_con_ia(texto):
     print("Analizando contenido con xAI (Grok)...")
     url = "https://api.x.ai/v1/chat/completions"
@@ -69,7 +69,6 @@ def analizar_con_ia(texto):
         "Content-Type": "application/json"
     }
     
-    # Recortamos el texto por seguridad si es muy grande para la IA
     texto_recortado = texto[:15000] if len(texto) > 15000 else texto
     
     prompt = f"""
@@ -82,7 +81,7 @@ def analizar_con_ia(texto):
     """
     
     data = {
-        "model": "grok-beta",
+        "model": "grok-2",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3
     }
@@ -97,6 +96,33 @@ def analizar_con_ia(texto):
             print(f"Respuesta del servidor: {response.text}")
         return "Hubo un error al generar el resumen de las ofertas."
 
+# --- 4. FUNCIÓN PARA ENVIAR CORREO ---
+def enviar_email(resumen):
+    print("Enviando correo electrónico...")
+    remitente = os.environ.get('EMAIL_USER')
+    password = os.environ.get('EMAIL_PASS')
+    destinatario = os.environ.get('EMAIL_TO')
+
+    if not remitente or not password or not destinatario:
+        print("Error: Faltan credenciales de correo en los Secrets de GitHub.")
+        return
+
+    msg = MIMEMultipart()
+    msg['From'] = remitente
+    msg['To'] = destinatario
+    msg['Subject'] = "Resumen Diario de Empleos - Uruguay"
+
+    msg.attach(MIMEText(resumen, 'plain', 'utf-8'))
+
+    try:
+        # Configuración por defecto para Gmail (puerto 465 SSL)
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(remitente, password)
+            server.sendmail(remitente, destinatario, msg.as_string())
+        print("¡Email con el resumen enviado con éxito!")
+    except Exception as e:
+        print(f"Error al enviar el correo: {e}")
+
 # --- EJECUCIÓN PRINCIPAL ---
 if __name__ == "__main__":
     print("Iniciando escaneo de páginas laborales...")
@@ -108,7 +134,4 @@ if __name__ == "__main__":
     print("\n--- RESUMEN GENERADO ---")
     print(resumen)
     
-    if "No se encontraron nuevos llamados" not in resumen:
-        enviar_email(resumen)
-    else:
-        print("No se enviará correo hoy ya que no hubo novedades relevantes.")
+    enviar_email(resumen)
