@@ -59,10 +59,12 @@ async def extraer_contenido():
 
 # --- 3. ANALIZAR Y FILTRAR CON GEMINI ---
 import requests
+import os
 
 def analizar_con_ia(texto):
-    print("Analizando contenido con Groq (Llama 3)...")
-    url = "https://api.groq.com/openai/v1/chat/completions"
+    print("Analizando contenido con xAI (Grok)...")
+    # Cambiamos la URL a la de xAI
+    url = "https://api.x.ai/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {os.environ.get('GROQ_API_KEY')}",
         "Content-Type": "application/json"
@@ -78,7 +80,7 @@ def analizar_con_ia(texto):
     """
     
     data = {
-        "model": "llama3-70b-8192",
+        "model": "grok-2-latest", # Cambiamos el modelo al de Grok
         "messages": [{"role": "user", "content": prompt}]
     }
     
