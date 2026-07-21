@@ -3,8 +3,6 @@ import smtplib
 import asyncio
 from email.mime.text import MIMEText
 from playwright.async_api import async_playwright
-from google import genai
-
 # 1. LISTA DE FUENTES A MONITOREAR
 PAGINAS = [
     # CFE
