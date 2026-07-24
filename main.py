@@ -1,11 +1,14 @@
 import os
 import smtplib
 import asyncio
+from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 from playwright.async_api import async_playwright
 from google import genai
 from google.genai import types, errors
+from markdown_pdf import MarkdownPdf, Section
 
 # 1. LISTA DE FUENTES A MONITOREAR
 PAGINAS = [
@@ -76,6 +79,10 @@ def analizar_con_ia(texto):
     Eres un asistente experto en recursos humanos. 
     A continuación te paso un texto extraído de varias páginas de empleo en Uruguay.
     Por favor, resume las ofertas de trabajo más relevantes, indicando cargo, institución y enlace si está disponible.
+
+    Formateá la respuesta en Markdown: un encabezado de nivel 2 (##) por institución, y cada
+    oferta como un ítem de lista con el cargo en negrita. Si no hay ofertas nuevas o relevantes,
+    decilo directamente en una sola línea.
     
     TEXTO:
     {texto}
@@ -97,8 +104,20 @@ def analizar_con_ia(texto):
         print(f"Error inesperado al analizar con IA: {e}")
         return "Hubo un error al generar el resumen de las ofertas."
 
-# --- 4. FUNCIÓN PARA ENVIAR CORREO ---
-def enviar_email(resumen):
+# --- 4. CONVERTIR EL RESUMEN (MARKDOWN) A PDF ---
+def markdown_a_pdf(texto_markdown, ruta_pdf):
+    """Convierte un texto en formato Markdown a un archivo PDF prolijo."""
+    css = """
+    body { font-family: Helvetica, Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #222222; }
+    h1, h2, h3 { color: #111111; }
+    a { color: #1155cc; }
+    """
+    pdf = MarkdownPdf(toc_level=0)
+    pdf.add_section(Section(texto_markdown, toc=False), user_css=css)
+    pdf.save(ruta_pdf)
+
+# --- 5. FUNCIÓN PARA ENVIAR CORREO ---
+def enviar_email(resumen, formato_pdf=False):
     print("Enviando correo electrónico...")
     remitente = os.environ.get('EMAIL_USER')
     password = os.environ.get('EMAIL_PASS')
@@ -114,6 +133,20 @@ def enviar_email(resumen):
     msg['Subject'] = "Resumen Diario de Empleos - Uruguay"
 
     msg.attach(MIMEText(resumen, 'plain', 'utf-8'))
+
+    if formato_pdf:
+        try:
+            nombre_pdf = f"resumen_empleos_{datetime.now().strftime('%Y-%m-%d')}.pdf"
+            ruta_pdf = f"/tmp/{nombre_pdf}"
+            markdown_a_pdf(resumen, ruta_pdf)
+
+            with open(ruta_pdf, 'rb') as f:
+                adjunto = MIMEApplication(f.read(), _subtype='pdf')
+            adjunto.add_header('Content-Disposition', 'attachment', filename=nombre_pdf)
+            msg.attach(adjunto)
+            print(f"PDF generado y adjuntado: {nombre_pdf}")
+        except Exception as e:
+            print(f"No se pudo generar el PDF, se envía el correo solo con el texto: {e}")
 
     try:
         # Configuración por defecto para Gmail (puerto 465 SSL)
@@ -135,4 +168,4 @@ if __name__ == "__main__":
     print("\n--- RESUMEN GENERADO ---")
     print(resumen)
     
-    enviar_email(resumen)
+    enviar_email(resumen, formato_pdf=True)
