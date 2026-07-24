@@ -4,7 +4,8 @@ import asyncio
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from playwright.async_api import async_playwright
-import requests
+from google import genai
+from google.genai import types, errors
 
 # 1. LISTA DE FUENTES A MONITOREAR
 PAGINAS = [
@@ -60,41 +61,40 @@ async def extraer_contenido():
         
     return "\n".join(resultados)
 
-# --- 3. ANALIZAR Y FILTRAR CON xAI (Grok) ---
-# --- 3. ANALIZAR Y FILTRAR CON xAI (Grok) ---
+# --- 3. ANALIZAR Y FILTRAR CON GOOGLE GEMINI ---
 def analizar_con_ia(texto):
-    print("Analizando contenido con xAI (Grok)...")
-    url = "https://api.x.ai/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {os.environ.get('GROQ_API_KEY')}",
-        "Content-Type": "application/json"
-    }
-    
-    texto_recortado = texto[:15000] if len(texto) > 15000 else texto
-    
+    print("Analizando contenido con Google Gemini...")
+
+    api_key = os.environ.get('GEMINI_API_KEY')
+    if not api_key:
+        print("Error: Falta la GEMINI_API_KEY en los Secrets de GitHub.")
+        return "Hubo un error al generar el resumen de las ofertas."
+
+    client = genai.Client(api_key=api_key)
+
     prompt = f"""
     Eres un asistente experto en recursos humanos. 
     A continuación te paso un texto extraído de varias páginas de empleo en Uruguay.
     Por favor, resume las ofertas de trabajo más relevantes, indicando cargo, institución y enlace si está disponible.
     
     TEXTO:
-    {texto_recortado}
+    {texto}
     """
-    
-    data = {
-        "model": "grok-3",
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.3
-    }
-    
+
     try:
-        response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        return response.json()['choices'][0]['message']['content']
+        response = client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.3
+            )
+        )
+        return response.text
+    except errors.APIError as e:
+        print(f"Error de la API de Gemini: {e.code} - {e.message}")
+        return "Hubo un error al generar el resumen de las ofertas."
     except Exception as e:
-        print(f"Error detallado al analizar con IA: {e}")
-        if hasattr(response, 'text'):
-            print(f"Respuesta del servidor: {response.text}")
+        print(f"Error inesperado al analizar con IA: {e}")
         return "Hubo un error al generar el resumen de las ofertas."
 
 # --- 4. FUNCIÓN PARA ENVIAR CORREO ---
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     print("Iniciando escaneo de páginas laborales...")
     contenido_extraido = asyncio.run(extraer_contenido())
     
-    print("Analizando contenido con Grok...")
+    print("Analizando contenido con Gemini...")
     resumen = analizar_con_ia(contenido_extraido)
     
     print("\n--- RESUMEN GENERADO ---")
