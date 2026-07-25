@@ -112,8 +112,12 @@ def markdown_a_pdf(texto_markdown, ruta_pdf):
     h1, h2, h3 { color: #111111; }
     a { color: #1155cc; }
     """
+    fecha = datetime.now().strftime('%d/%m/%Y')
+    contenido = f"# Resumen Diario de Empleos - Uruguay\n*{fecha}*\n\n{texto_markdown}"
+
     pdf = MarkdownPdf(toc_level=0)
-    pdf.add_section(Section(texto_markdown, toc=False), user_css=css)
+    pdf.add_section(Section(contenido, toc=False), user_css=css)
+    pdf.meta["title"] = "Resumen Diario de Empleos - Uruguay"
     pdf.save(ruta_pdf)
 
 # --- 5. FUNCIÓN PARA ENVIAR CORREO ---
