@@ -20,9 +20,12 @@ jobs:
         run: |
           python -m playwright install chromium
           python -m playwright install-deps
+      - name: Verificar configuración y recuperación
+        run: python -m unittest discover -v
       - name: Ejecutar Scraper e IA
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.6-flash' }}
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}

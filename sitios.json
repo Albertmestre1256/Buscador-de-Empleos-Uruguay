@@ -1,0 +1,78 @@
+[
+  {
+    "nombre": "Uruguay Concursa - Empleo público",
+    "url": "https://uruguayconcursa.gub.uy/search",
+    "activo": true,
+    "esperar_respuesta": "/api-backend/llamados/find"
+  },
+  {
+    "nombre": "BPS - Concursos externos vigentes",
+    "url": "https://www.bps.gub.uy/63/concursos-externos-vigentes.html",
+    "activo": true
+  },
+  {
+    "nombre": "OSE - Concursos externos",
+    "url": "https://www.ose.com.uy/oportunidades-laborales/concursos-externos",
+    "activo": true
+  },
+  {
+    "nombre": "Intendencia de Montevideo - Convocatorias y llamados",
+    "url": "https://montevideo.gub.uy/noticias/convocatorias-y-llamados-0?page=0",
+    "activo": true
+  },
+  {
+    "nombre": "Udelar - Concursos y llamados",
+    "url": "https://www.concursos.udelar.edu.uy/index.php?script=27",
+    "activo": true
+  },
+  {
+    "nombre": "CFE - Elección de Horas",
+    "url": "https://www.cfe.edu.uy/index.php/funcionarios/docentes/eleccion-de-horas",
+    "activo": true
+  },
+  {
+    "nombre": "CFE - Concursos Portal",
+    "url": "https://concursos.cfe.edu.uy/ConcursosCFE/servlet/com.si.recsel.inicio",
+    "activo": true
+  },
+  {
+    "nombre": "CFE - Principal",
+    "url": "https://www.cfe.edu.uy/",
+    "activo": true
+  },
+  {
+    "nombre": "CFE - Llamados Abreviados",
+    "url": "https://www.cfe.edu.uy/index.php/funcionarios/docentes/llamados-abreviados",
+    "activo": true
+  },
+  {
+    "nombre": "UTU - Concursos y Llamados",
+    "url": "https://www.utu.edu.uy/funcionarios/concursos-y-llamados/",
+    "activo": true
+  },
+  {
+    "nombre": "ANII - Contrataciones",
+    "url": "https://anii.org.uy/institucional/contrataciones/",
+    "activo": true
+  },
+  {
+    "nombre": "UCU - Trabaje con Nosotros",
+    "url": "https://www.ucu.edu.uy/categoria/Trabaje-con-nosotros-417",
+    "activo": true
+  },
+  {
+    "nombre": "UCU - Llamados Docentes",
+    "url": "https://www.ucu.edu.uy/categoria/Llamados-docentes-455",
+    "activo": true
+  },
+  {
+    "nombre": "ORT - Oportunidades Laborales",
+    "url": "https://www.ort.edu.uy/oportunidades-laborales",
+    "activo": true
+  },
+  {
+    "nombre": "Computrabajo - Montevideo",
+    "url": "https://uy.computrabajo.com/empleos-en-montevideo",
+    "activo": true
+  }
+]
