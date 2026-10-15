@@ -1,5 +1,10 @@
 # Buscador de Empleos Uruguay
 
+Esta es una nueva versión retocada del buscador original. Usé OpenAI Codex para
+ampliar su funcionamiento: incorporar más fuentes de empleo público, agregar
+recomendaciones según un perfil editable y mejorar la recuperación ante fallos
+de Gemini.
+
 Recorre sitios de empleo, reúne el contenido disponible y le pide a Google Gemini
 un informe con **llamados encontrados** y **recomendaciones según un perfil**.
 Guarda el informe en `salida/informe.md` y, por defecto, lo envía por Gmail con un
