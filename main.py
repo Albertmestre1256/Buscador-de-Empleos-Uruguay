@@ -9,6 +9,7 @@ from playwright.async_api import async_playwright
 from google import genai
 from google.genai import types, errors
 from markdown_pdf import MarkdownPdf, Section
+from resilience import generar_con_reintentos, informe_respaldo
 
 # 1. LISTA DE FUENTES A MONITOREAR
 PAGINAS = [
@@ -71,7 +72,8 @@ def analizar_con_ia(texto):
     api_key = os.environ.get('GEMINI_API_KEY')
     if not api_key:
         print("Error: Falta la GEMINI_API_KEY en los Secrets de GitHub.")
-        return "Hubo un error al generar el resumen de las ofertas."
+        print("::warning::Informe de respaldo: falta GEMINI_API_KEY.")
+        return informe_respaldo(texto, "No se configuró la clave de Gemini.")
 
     client = genai.Client(api_key=api_key)
 
@@ -89,20 +91,22 @@ def analizar_con_ia(texto):
     """
 
     try:
-        response = client.models.generate_content(
-            model="gemini-3.6-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.3
+        def generar():
+            response = client.models.generate_content(
+                model=os.environ.get("GEMINI_MODEL", "gemini-3.6-flash"),
+                contents=prompt,
+                config=types.GenerateContentConfig(temperature=0.3)
             )
-        )
-        return response.text
+            return response.text
+        return generar_con_reintentos(generar)
     except errors.APIError as e:
-        print(f"Error de la API de Gemini: {e.code} - {e.message}")
-        return "Hubo un error al generar el resumen de las ofertas."
+        print(f"::warning::Gemini falló (HTTP {e.code}); se genera informe de respaldo.")
+        motivo = ("Gemini alcanzó un límite de cuota (HTTP 429)." if e.code == 429
+                  else f"Gemini no pudo generar el análisis (HTTP {e.code}).")
+        return informe_respaldo(texto, motivo)
     except Exception as e:
-        print(f"Error inesperado al analizar con IA: {e}")
-        return "Hubo un error al generar el resumen de las ofertas."
+        print(f"::warning::Falló el análisis ({type(e).__name__}); se genera informe de respaldo.")
+        return informe_respaldo(texto, "No se pudo completar el análisis de Gemini.")
 
 # --- 4. CONVERTIR EL RESUMEN (MARKDOWN) A PDF ---
 def markdown_a_pdf(texto_markdown, ruta_pdf):
